@@ -5,6 +5,8 @@ let yellowPlayer = "player1";
 let blackPlayer = "player2";
 let frameHistory = [];
 
+let currentFrameScore = { yellow: 0, black: 0 };
+
 let timerInterval;
 let totalSeconds = 0;
 
@@ -20,36 +22,58 @@ function updateUI() {
 function addPoints(discColor, points) {
     let player = (discColor === "yellow") ? yellowPlayer : blackPlayer;
     scores[player] += points;
+    currentFrameScore[discColor] += points;
+
+    // Update current frame in history
     if (!frameHistory[frame - 1]) {
         frameHistory[frame - 1] = { frame, yellow: 0, black: 0 };
     }
-    frameHistory[frame - 1][discColor] += points;
+    frameHistory[frame - 1][discColor] = currentFrameScore[discColor];
+
     updateUI();
 }
 
 function nextFrame() {
+    // Store current frame in history if not already
+    if (!frameHistory[frame - 1]) {
+        frameHistory[frame - 1] = {
+            frame,
+            yellow: currentFrameScore.yellow,
+            black: currentFrameScore.black
+        };
+    }
+
     frame++;
+
     if (frame === 9) {
         let temp = yellowPlayer;
         yellowPlayer = blackPlayer;
         blackPlayer = temp;
     }
+
+    // Reset current frame score
+    currentFrameScore = { yellow: 0, black: 0 };
     updateUI();
 }
 
 function previousFrame() {
     if (frame > 1) {
-        let last = frameHistory[frame - 1];
+        let lastFrame = frame - 1;
+        let last = frameHistory[lastFrame - 1];
+
         if (last) {
             scores[yellowPlayer] -= last.yellow || 0;
             scores[blackPlayer] -= last.black || 0;
+            currentFrameScore = { yellow: last.yellow || 0, black: last.black || 0 };
             frameHistory.pop();
         }
+
         if (frame === 9) {
             let temp = yellowPlayer;
             yellowPlayer = blackPlayer;
             blackPlayer = temp;
         }
+
         frame--;
         updateUI();
     }
